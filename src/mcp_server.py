@@ -33,13 +33,23 @@ class MCPAcademicServer:
         """
         # --------------------------------------------------------------------------
         # TODO 2.1: HỌC VIÊN HOÀN THIỆN HÀM GỌI TOOL CHUẨN MCP JSON-RPC
-        # 🎯 YÊU CẦU THỰC THI THUẬT TOÁN:
-        # 1. Gọi hàm dispatch_tool_call(tool_name, arguments) để lấy chuỗi JSON kết quả từ Tool Router.
-        # 2. Chuyển đổi chuỗi JSON kết quả thành Python Dictionary (dùng json.loads).
-        # 3. Đóng gói phản hồi và trả về Dict theo đúng chuẩn giao thức MCP JSON-RPC 2.0:
-        #    - Các trường bắt buộc: "jsonrpc": "2.0", "server": self.server_name, "tool": tool_name, "result": content
         # --------------------------------------------------------------------------
-        return {}
+        # Bước 1: Điều phối gọi backend tool thực tế
+        raw_result = dispatch_tool_call(tool_name, arguments)
+        
+        # Bước 2: Parse kết quả từ JSON string sang Python dict
+        try:
+            content = json.loads(raw_result)
+        except Exception:
+            content = {"status": "RAW_OUTPUT", "data": raw_result}
+            
+        # Bước 3: Đóng gói phản hồi chuẩn MCP JSON-RPC 2.0
+        return {
+            "jsonrpc": "2.0",
+            "server": self.server_name,
+            "tool": tool_name,
+            "result": content
+        }
 
 
 if __name__ == "__main__":

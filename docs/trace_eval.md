@@ -1,7 +1,7 @@
 # 📊 BÁO CÁO THU HOẠCH NGHIỆM THU BÀI LAB 3 (BƯỚC 3 — SUBMISSION ARTIFACT)
 
-> **Họ và Tên Học viên:** [Điền Họ và Tên]  
-> **Mã Sinh Viên / Mã Học viên:** [Điền MSSV]  
+> **Họ và Tên Học viên:** [Nguyễn Nguyên Phong] 
+> **Mã Sinh Viên / Mã Học viên:** [2A202602691]  
 > **Chủ đề Lựa chọn:** [Điền tên chủ đề đã chọn từ docs/DANH_SACH_DE_TAI.md hoặc Đề tài Mở]  
 
 ---
@@ -10,11 +10,11 @@
 
 | Tiêu chí Đánh giá | Mức độ (1 - 5) | Giải trình chi tiết lý do chọn điểm |
 | :--- | :---: | :--- |
-| **1. Multi-step Reasoning** | / 5 | Bài toán có yêu cầu chia nhỏ nhiều bước suy luận nối tiếp nhau không? |
-| **2. Tool Interaction** | / 5 | Hệ thống có cần kết nối với MCP Server / Cơ sở dữ liệu bên ngoài không? |
-| **3. Dynamic Decision** | / 5 | Bước tiếp theo có phụ thuộc vào kết quả quan sát bước trước không? |
-| **4. Long Horizon Goal** | / 5 | Hệ thống có phải giữ mục tiêu xuyên suốt qua nhiều lượt xử lý không? |
-| **TỔNG ĐIỂM AGENTIC FIT** | **/ 20** | *Nếu tổng điểm > 12/20: Bài toán rất phù hợp triển khai Agentic System.* |
+| **1. Multi-step Reasoning** | 5/ 5 | Bài toán đòi hỏi chuỗi xử lý liên hoàn: Đầu tiên tra cứu hồ sơ sinh viên → Trích xuất tên cố vấn học tập phụ trách→ Sử dụng tên cố vấn và thông tin lịch hẹn để kích hoạt công cụ đặt lịch. |
+| **2. Tool Interaction** | 5/ 5 |LLM không thể tự biết GPA, tình trạng học vụ hay lịch trống nội bộ của nhà trường. Hệ thống bắt buộc phải gọi các Tool (academic_query, schedule_appointment) qua MCP Server để đọc/ghi dữ liệu thực tế.? |
+| **3. Dynamic Decision** | 4/ 5 | Quyết định bước tiếp theo phụ thuộc vào kết quả quan sát (Observation): Nếu mã SV hợp lệ → tiếp tục phân tích cố vấn và đặt lịch; nếu trả về NOT_FOUND→ dừng luồng và thông báo lỗi, không tự bịa đặt thông tin. |
+| **4. Long Horizon Goal** | 4/ 5 | Agent phải duy trì ngữ cảnh xuyên suốt cuộc hội thoại: từ tiếp nhận nhu cầu ban đầu của sinh viên đến khi hoàn tất gửi mã xác nhận lịch hẹn (booking_id). |
+| **TỔNG ĐIỂM AGENTIC FIT** | 18/ 20 | *Nếu tổng điểm > 12/20: Bài toán rất phù hợp triển khai Agentic System.* |
 
 ---
 
@@ -28,20 +28,31 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
 [
   {
     "step": 1,
+    "query": "Tôi là sinh viên SV2026001, hãy đặt giúp tôi một lịch hẹn tư vấn học vụ với thầy PGS.TS Nguyễn Văn A vào lúc 09:00 ngày 20/09/2026.",
     "action_type": "TOOL_EXECUTION",
-    "tool_name": "academic_query",
+    "tool_name": "schedule_appointment",
     "arguments": {
+      "datetime_str": "09:00 20/09/2026",
+      "advisor_name": "PGS.TS Nguyễn Văn A",
       "student_id": "SV2026001"
     },
     "observation": {
       "status": "SUCCESS",
+      "booking_id": "BK-SV2026001-99",
       "student_id": "SV2026001",
-      "data": {
-        "full_name": "Nguyễn Văn An",
-        "gpa": 3.85
-      }
+      "datetime": "09:00 20/09/2026",
+      "advisor": "PGS.TS Nguyễn Văn A",
+      "message": "Đặt lịch thành công cho sinh viên SV2026001 với PGS.TS Nguyễn Văn A vào lúc 09:00 20/09/2026."
     },
-    "latency_ms": 120.5
+    "latency_ms": 1794.61
+  },
+  {
+    "step": 2,
+    "query": "Tôi là sinh viên SV2026001, hãy đặt giúp tôi một lịch hẹn tư vấn học vụ với thầy PGS.TS Nguyễn Văn A vào lúc 09:00 ngày 20/09/2026.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Tổng hợp kết quả từ MCP Server thành công.",
+    "output": "Đặt lịch thành công cho sinh viên SV2026001 với PGS.TS Nguyễn Văn A vào lúc 09:00 20/09/2026.",
+    "latency_ms": 10.0
   }
 ]
 ```
@@ -50,10 +61,10 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
 
 ## 3. TỔNG KẾT KẾT QUẢ NGHIỆM THU & NỘP BÀI
 
-- [ ] Đã điền API Key thật trong `.env` và xác nhận Agent chạy mượt mà trên LLM API thật (Gemini/OpenAI).
-- **Tổng số Test Cases đã chạy thành công:** ___ / 5 test cases.
-- **Số lượt gọi Tool qua MCP Server chính xác:** ___ lượt.
-- **Kết quả đẩy Repo nộp bài:** [ ] Đã Commit và Push mã nguồn thành công lên GitHub cá nhân.
+- [x] Đã điền API Key thật trong `.env` và xác nhận Agent chạy mượt mà trên LLM API thật (Gemini `gemini-3.5-flash-lite`).
+- **Tổng số Test Cases đã chạy thành công:** 5 / 5 test cases.
+- **Số lượt gọi Tool qua MCP Server chính xác:** 4 lượt (TC02: `academic_query`, TC03: `schedule_appointment`, TC04: `academic_query`, TC05: `academic_query` nhận diện edge case `NOT_FOUND`).
+- **Kết quả đẩy Repo nộp bài:** [x] Đã Commit và Push mã nguồn thành công lên GitHub cá nhân.
 
 ---
 
